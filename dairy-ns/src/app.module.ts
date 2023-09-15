@@ -20,18 +20,36 @@ import {
 } from './schema/users/dairy-inspector.user.schema';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: '.local.env' }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'), // <-- path to the static files
     }),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: 'your_secret_key_here',
-      signOptions: { expiresIn: '1d' }, // Token expiration time
+    // JwtModule.register({
+    //   secret: 'your_secret_key_here',
+    //   signOptions: { expiresIn: '1d' }, // Token expiration time
+    // }),
+    JwtModule.registerAsync({
+      imports: [ConfigModule],
+      useFactory: (configService: ConfigService) => ({
+        secret: configService.get('JWT_KEY'),
+        signOptions: {
+          expiresIn: configService.get<string>('JWT_EXPIRE') + 'd',
+        },
+      }),
+      inject: [ConfigService],
     }),
-    MongooseModule.forRoot('mongodb://localhost/milk-mgmt'),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      useFactory: async (configService: ConfigService) => ({
+        uri: configService.get<string>('CON_URI'),
+      }),
+      inject: [ConfigService],
+    }),
     MongooseModule.forFeature([
       {
         name: User.name,
