@@ -23,6 +23,7 @@ import {
   UserDairyInspector,
   UserDairyInspectorSchemaClass,
 } from 'src/schema/users/dairy-inspector.user.schema';
+import { MailService } from 'src/utilities/mail.service';
 
 @Injectable()
 export class UserRegistrationService {
@@ -32,6 +33,7 @@ export class UserRegistrationService {
     private userDairyFarmerModel: Model<UserDairyFarmer>,
     @InjectModel(UserDairyInspector.name)
     private userDairyInspectorModel: Model<UserDairyInspector>,
+    private mailService: MailService,
   ) {}
 
   async create(user: UserDTO): Promise<any> {
@@ -81,7 +83,6 @@ export class UserRegistrationService {
         }),
       ),
     );
-    console.log('hehrehehre: ', userData);
     await this.userDairyFarmerModel.create({
       ...classToPlain(plainToClass(UserDairyFarmerSchemaClass, dairyFarmer)),
       user: userData._id,
@@ -109,6 +110,12 @@ export class UserRegistrationService {
         'An error has occurred while adding a user',
       );
     }
+  }
+
+  async healthCheck(email: string): Promise<any> {
+    return this.mailService.sendEmail(email, 'email-verification', {
+      verificationLink: 'https://www.opticalarc.com/',
+    });
   }
 
   private async validateUserDTO(user: UserDTO, DTOClass: any): Promise<void> {

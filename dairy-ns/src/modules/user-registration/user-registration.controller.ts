@@ -45,4 +45,9 @@ export class UserRegistrationController {
   async delete(@Param('id') id: string): Promise<User> {
     return this.userRegistrationService.delete(id);
   }
+
+  @Post('health-check')
+  async healthCheck(@Body() payLoad: any): Promise<string> {
+    return this.userRegistrationService.healthCheck(payLoad.email);
+  }
 }
