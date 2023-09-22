@@ -4,7 +4,7 @@ import { AppService } from './app.service';
 import { MongooseModule } from '@nestjs/mongoose';
 import { UserRegistrationModule } from './modules/user-registration/user-registration.module';
 import { UserLoginModule } from './modules/user-login/user-login.module';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { AuthService } from './auth/auth.service';
 import { User, UserSchema } from './schema/users/user.schema';
 import { LocalStrategy } from './auth/local.strategy';
@@ -21,6 +21,7 @@ import {
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MilkReportModule } from './modules/milk-report/milk-report.module';
 
 @Module({
   imports: [
@@ -66,6 +67,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     ]),
     UserRegistrationModule,
     UserLoginModule,
+    MilkReportModule,
   ],
   controllers: [AppController],
   providers: [AppService, AuthService, LocalStrategy, JwtStrategy],
