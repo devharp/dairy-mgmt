@@ -8,6 +8,7 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { MilkReportService } from './milk-report.service';
 import { CreateMilkReportDto } from 'src/constants/dto/milk-report.dto';
@@ -32,13 +33,31 @@ export class MilkReportController {
   }
 
   @Get()
-  findAll() {
-    return this.milkReportService.findAll();
+  findAll(
+    @Request() req: any,
+    @Query('byMe') byMe: boolean,
+    @Query('page') page?: number,
+    @Query('perPage') perPage?: number,
+    @Query('from') from?: string,
+    @Query('to') to?: string,
+    @Query('milkType') milkType?: string,
+    @Query('isRejected') isRejected?: boolean,
+  ) {
+    return this.milkReportService.findAll(
+      req.user.id,
+      byMe,
+      page,
+      perPage,
+      from,
+      to,
+      milkType,
+      isRejected,
+    );
   }
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.milkReportService.findOne(+id);
+    return this.milkReportService.findOne(id);
   }
 
   // @Patch(':id')

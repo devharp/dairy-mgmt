@@ -1,6 +1,8 @@
 import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { Document, Types } from 'mongoose';
 import { User } from '../users/user.schema';
+import * as mongoosePaginate from 'mongoose-paginate-v2';
+
 export type MilkReportDocument = MilkReport & Document;
 
 @Schema({ collection: 'milk-report' })
@@ -56,3 +58,4 @@ export class MilkReport {
 }
 
 export const MilkReportSchema = SchemaFactory.createForClass(MilkReport);
+MilkReportSchema.plugin(mongoosePaginate);

@@ -11,7 +11,7 @@ export class TimeCheckMiddleware implements NestMiddleware {
   use(req: Request, res: Response, next: NextFunction) {
     const currentTime = new Date();
     let currentHour = currentTime.getHours();
-    // currentHour = 20;
+    // currentHour = 8;
     const isAllowedTime =
       (currentHour >= 6 && currentHour < 9) ||
       (currentHour >= 16 && currentHour < 19);
