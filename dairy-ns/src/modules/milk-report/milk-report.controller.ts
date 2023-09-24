@@ -9,9 +9,13 @@ import {
   UseGuards,
   Request,
   Query,
+  Put,
 } from '@nestjs/common';
 import { MilkReportService } from './milk-report.service';
-import { CreateMilkReportDto } from 'src/constants/dto/milk-report.dto';
+import {
+  CreateMilkReportDto,
+  UpdateMilkReportDto,
+} from 'src/constants/dto/milk-report.dto';
 import { globalValidationPipe } from 'src/pipes/global-validation.pipe';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from 'src/auth/roles.guard';
@@ -31,7 +35,7 @@ export class MilkReportController {
   ) {
     return this.milkReportService.create(createMilkReportDto, req.user.id);
   }
-
+  @Roles('dairy-inspector')
   @Get()
   findAll(
     @Request() req: any,
@@ -60,14 +64,20 @@ export class MilkReportController {
     return this.milkReportService.findOne(id);
   }
 
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateMilkReportDto: UpdateMilkReportDto) {
-  //   return this.milkReportService.update(+id, updateMilkReportDto);
-  // }
+  @Roles('dairy-inspector')
+  @Put(':id')
+  update(
+    @Request() req: any,
+    @Param('id') id: string,
+    @Body(globalValidationPipe) updateMilkReportDto: UpdateMilkReportDto,
+  ) {
+    return this.milkReportService.update(req.user.id, id, updateMilkReportDto);
+  }
 
+  @Roles('dairy-inspector')
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.milkReportService.remove(+id);
+  remove(@Request() req: any, @Param('id') id: string) {
+    return this.milkReportService.remove(req.user.id, id);
   }
 }
 
