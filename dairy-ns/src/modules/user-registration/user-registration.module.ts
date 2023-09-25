@@ -14,6 +14,8 @@ import {
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MailService } from 'src/utilities/mail.service';
+import { TwilioService } from 'src/utilities/sms.service';
+import { EncryptionService } from 'src/utilities/Encryption.service';
 
 @Module({
   imports: [
@@ -54,7 +56,12 @@ import { MailService } from 'src/utilities/mail.service';
     }),
   ],
   controllers: [UserRegistrationController],
-  providers: [UserRegistrationService, MailService],
+  providers: [
+    UserRegistrationService,
+    MailService,
+    TwilioService,
+    EncryptionService,
+  ],
   exports: [MailService],
 })
 export class UserRegistrationModule {}
