@@ -21,6 +21,18 @@ export class User extends Document {
 
   @Prop({ enum: USER_ROLE, default: USER_ROLE.DAIRY_FARMER })
   role: string;
+
+  @Prop({
+    type: {
+      token: { type: String, default: '' },
+      expiration: { type: Date, default: null },
+    },
+    default: null,
+  })
+  token?: {
+    otp: string;
+    expiration: Date;
+  };
 }
 
 @Exclude()

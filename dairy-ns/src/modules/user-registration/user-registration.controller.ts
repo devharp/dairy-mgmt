@@ -13,6 +13,10 @@ import { globalValidationPipe } from 'src/pipes/global-validation.pipe';
 import { UserDTO } from 'src/constants/dto/user.dto.class';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import {
+  resetPasswordDto,
+  updatePasswordDto,
+} from 'src/constants/dto/reset-pass.dto';
 
 @Controller('user-registration')
 export class UserRegistrationController {
@@ -44,5 +48,26 @@ export class UserRegistrationController {
   @Delete(':id')
   async delete(@Param('id') id: string): Promise<User> {
     return this.userRegistrationService.delete(id);
+  }
+
+  @Post('health-check')
+  async healthCheck(@Body() payLoad: any): Promise<string> {
+    return this.userRegistrationService.healthCheck(payLoad.email);
+  }
+
+  @Post('request-reset')
+  async requestReset(@Body(globalValidationPipe) payload: resetPasswordDto) {
+    return await this.userRegistrationService.resetPassword(payload.mobileNo);
+  }
+
+  @Post('/update-password')
+  async updatePasswordField(
+    @Body(globalValidationPipe) securityPayload: updatePasswordDto,
+  ) {
+    const { password, otp } = securityPayload;
+    return await this.userRegistrationService.newPasswordUsingToken(
+      password,
+      otp,
+    );
   }
 }

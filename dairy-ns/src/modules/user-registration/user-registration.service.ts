@@ -1,5 +1,7 @@
 import {
   BadRequestException,
+  HttpException,
+  HttpStatus,
   Injectable,
   InternalServerErrorException,
 } from '@nestjs/common';
@@ -23,6 +25,9 @@ import {
   UserDairyInspector,
   UserDairyInspectorSchemaClass,
 } from 'src/schema/users/dairy-inspector.user.schema';
+import { MailService } from 'src/utilities/mail.service';
+import { EncryptionService } from 'src/utilities/Encryption.service';
+import { TwilioService } from 'src/utilities/sms.service';
 
 @Injectable()
 export class UserRegistrationService {
@@ -32,6 +37,9 @@ export class UserRegistrationService {
     private userDairyFarmerModel: Model<UserDairyFarmer>,
     @InjectModel(UserDairyInspector.name)
     private userDairyInspectorModel: Model<UserDairyInspector>,
+    private mailService: MailService,
+    private encryptionService: EncryptionService,
+    private smsService: TwilioService,
   ) {}
 
   async create(user: UserDTO): Promise<any> {
@@ -81,7 +89,6 @@ export class UserRegistrationService {
         }),
       ),
     );
-    console.log('hehrehehre: ', userData);
     await this.userDairyFarmerModel.create({
       ...classToPlain(plainToClass(UserDairyFarmerSchemaClass, dairyFarmer)),
       user: userData._id,
@@ -111,6 +118,12 @@ export class UserRegistrationService {
     }
   }
 
+  async healthCheck(email: string): Promise<any> {
+    return this.mailService.sendEmail(email, 'email-verification', {
+      verificationLink: 'https://www.opticalarc.com/',
+    });
+  }
+
   private async validateUserDTO(user: UserDTO, DTOClass: any): Promise<void> {
     const userObject = plainToClass(DTOClass, user);
     const validationErrors = await validate(userObject as object);
@@ -119,6 +132,66 @@ export class UserRegistrationService {
         .map((error) => Object.values(error.constraints).join(', '))
         .join(', ');
       throw new BadRequestException(errorMessage);
+    }
+  }
+
+  public async resetPassword(
+    mobileNo: string,
+  ): Promise<{ success: boolean; message: string }> {
+    if (await this.userModel.findOne({ mobileNo })) {
+      const otp: any = this.encryptionService.OTPGeneration(6);
+      const expiration = new Date();
+      expiration.setMinutes(expiration.getMinutes() + 10);
+      await this.userModel.collection.updateOne(
+        { mobileNo },
+        {
+          $set: {
+            token: {
+              otp,
+              expiration,
+            },
+          },
+        },
+      );
+      return await this.smsService.sendSms(
+        mobileNo,
+        `Hello! Your OTP to reset your password is:${otp}. If you didn't request this, please ignore this message.
+      `,
+      );
+    } else {
+      throw new HttpException('Unknown Number', HttpStatus.UNAUTHORIZED);
+    }
+  }
+
+  public async newPasswordUsingToken(
+    newPassword: string,
+    otp: string,
+  ): Promise<{ success: boolean; message: string }> {
+    try {
+      const updatedUser = await this.userModel.findOneAndUpdate(
+        {
+          'token.otp': otp,
+          'token.expiration': { $gt: new Date() },
+        },
+        {
+          $set: {
+            password: await bcrypt.hash(newPassword, 10),
+            token: null,
+          },
+        },
+        { new: true },
+      );
+      if (!updatedUser) {
+        return Promise.reject(
+          new HttpException('Invalid or expired OTP', HttpStatus.UNAUTHORIZED),
+        );
+      }
+      return { success: true, message: 'Password updated successfully.' };
+    } catch (error) {
+      throw new HttpException(
+        'An error occurred while updating password',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }
